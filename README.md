@@ -204,7 +204,8 @@ Let's introduce an extra variable `dead`:
 3. add `dead` to the function call to `visit_planet()`
 4. add `dead` to the return statement in `visit_planet()`
 5. replace the single `return` statements by `dead = True`
-6. run the tests
+6. add `dead` to the conditions terminating the `while` loop in travel
+7. run the tests
 
 The tests should pass now.
 
@@ -234,20 +235,8 @@ In his [Clean Code Lectures](), Uncle Bob (Robert C. Martin) speaks :
     
     A: When you cannot make two functions out of it.
 
-That means we could probably extract even more functions.
-Think about extracting functions for the little puzzles where the player has to enter stuff:
-
-    def star_quiz(...):
-
-    def buy_hyperdrive(...):
-
-    def hire_copilot(...):
-
-    def black_hole(...):
-
-    def oracle_quiz(...):
-
-Although these might be good ideas, we do not have to do that **right now**. 
+That means we could probably extract even more functions, especially from `visit_planet()`.
+Although this is a good idea, we do not have to do that **right now**. 
 There are other, more important refactorings to take care of.
 
 Feel free to experiment with extracting functions on your own.
@@ -260,7 +249,7 @@ After extracting a module and functions, the `travel()` function became a lot sh
 But there are still many things to improve.
 Let's focus on the data structures:
 
-### 8.1 Encapsulate boolean flags
+### 8.1 Exercise: Extract boolean flags
 
 The progress of the game is controlled by a bunch of booleans: `copilot`, `credits`, `crystal_found` etc.
 These booleans are passed around together several times.
@@ -268,29 +257,40 @@ This is a clear sign that they belong together and should be a data structure.
 
 What Python data structure can we use to store the presence or absence of multiple items?
 
-Let's use a Python set that we call `flags`.
-So instead of setting multiple booleans to false in `travel()`, you would define an empty set.
+Let's use a Python `set` that we call `flags`.
+We need to modify a lot of code.
+
+First, instead of setting multiple booleans to `False` in `travel()`, define an empty set.
 
     flags = set()
 
-To check a flag, we would use its name as a string. So the next line in `travel()` would become:
+To check a flag, we would use its name as a string. So the `while` condition in `travel()` would become:
 
     while not 'crystal_found' in flags or 'dead' in flags:
 
-Now, change the calls to `display_inventory()` and `visit_planet()` to use `flags`:
+Now, we need to change the function `display_inventory()` as well:
 
-- replace the boolean arguments by a single argument `flags`
-- remove the boolean arguments from the return values (the set is mutable). `visit_planet()` only returns `planet` and `destinations`.
-- modify the function definition and return statement accordingly.
-- whenever one of the booleans is checked, use the `in` operator instead, e.g. `if 'credits' in flags:`
-- whenever one of the boolean is modified, add to the set, e.g. `flags.add('crystal_found')` (there are quite a few occurences throughout `visit_planet()`)
+1. replace the boolean arguments by a single argument `flags`
+2. modify the function call accordingly
+3. modify the function body to use the `in` operator when checking state, e.g. `if 'credits' in flags:`
 
-Finally, run the tests again.
+We need to do the same with `visit_planet()`
 
-### Destinations
+1. replace the boolean arguments by a single argument `flags`
+2. modify the function call accordingly
+3. remove the booleans from the return values (the set is mutable). `visit_planet()` only returns `planet` and `destinations`.
+4. remove the booleans from the assigned return in `travel()` as well
+5. modify the function body to use the `in` operator when checking state, e.g. `if 'credits' in flags:`
+6. modify the function body of `visit_planet()`. Whenever one of the booleans is modified, add to the set, e.g. `flags.add('crystal_found')`
+
+Finally, run the tests again. The tests should pass.
+
+*Note that looking up things in the set uses string comparison. This is not very performant, of course, but in a text adventure I frankly don't care. If performance becomes important, one could replace the strings by integers or Enums. Also, if you believe performance is important, how about writing a performance test for it first?*
+
+### 8.2 Exercise: Extract a dictionary
 
 The destinations can be placed in a data structure as well.
-There is always a list of destinations that depends on the planet.
+With each planet in `visit_planet()` there is always a list of destinations returned.
 
 Let's use the following dictionary instead:
 
@@ -303,23 +303,152 @@ Let's use the following dictionary instead:
         'oracle': ['earth']
     }
 
-Fill in the two missing positions. 
-Remove the individual definitions of `destinations`.
-Instead, at the end of the `visit_planet()` function, look up the destinations with:
+1. place the dictionary on top of the Python file
+2. fill in the two missing positions
+3. remove the individual definitions of `destinations`
+4. instead, at the end of the `visit_planet()` function, look up the destinations with `return STARMAP[planet]`
+5. run the tests
 
-    return STARMAP[planet]
+The tests should pass.
 
-Run the tests afterwards.
+----
 
-7. Encapsulate behavior into a class (this will take longer, because we need to discuss pros and cons of different alternatives)
-   - decouple
+## 9. Extract a Class
 
-9. Discuss common strategies (functional, class-based and hybrid paradigms, design patterns, testability.
+By now, the `visit_planet()` function has not changed much. 
+We managed to save a couple of lines by extracting the `STARMAP` dictionary.
+But there is still has a huge nested `if` block.
+Let's see what we can do.
+
+### 9.1 Are more dictionaries a good idea?
+
+Should we maybe extract the descriptions of each planet into *another* dictionary?
+We would get:
+
+PLANET_DESCRIPTIONS = {
+    'earth': TEXT['EARTH_DESCRIPTION],
+    'sirius': TEXT['SIRIUS_DESCRIPTION],
+    ...
+}
+
+You could do this, and it would further simplify `visit_planet()`. 
+But seeing multiple dictionaries with the same keys is a clear hint that there is a deeper structure in our code.
+We will extract a class.
+
+### 9.2 Exercise: The Planet class
+
+We find a couple of things that the planets have in common:
+
+* every planet has a name
+* every planet has a description
+* every planet has connections to other planets
+* some planets have a puzzle
+
+These are attributes of the new class.
+
+Let's define a new class with the following signature:
+
+    class Planet:
+
+        def __init__(self, name, description, puzzle=None):
+            self.name = name
+            self.description = description
+            self.puzzle = puzzle
+
+For the destinations, we can use the `@property` decorator, so we can continue using the `STARMAP` dict:
+
+        @property
+        def destinations(self):
+            return STARMAP[self.name]
+
+Add this code after the definition of `STARMAP`. 
+
+Run the tests to make sure you didn't mess up anything (even though we do not use the class yet).
+
+### 9.3 Exercise: Add a method
+
+We will convert the function `visit_planet()` into a method of the new `Planet` class.
+
+Move the entire code from `visit_planet()` into a new method with the signature:
+
+    def visit(self, flags):
+
+As the first thing, have the planet print its own description:
+
+        print(self.description)
+
+That removes a few lines from the function and makes the code easier to read.
+
+The tests won't pass at this point. You may want to run them to make sure you are editing the right file.
 
 
-8. Run the tests again (and emphasize that points 3.+8. are the most important ones on the list; still thinking about special effects here)
+### 9.4 Exercise: Create instances
 
-## 9. Other Refactoring Strategies
+Let's create a dictionary of planets.
+We will do so on the module level:
+
+    PLANETS = {
+        'earth': Planet('earth', TEXT['EARTH_DESCRIPTION']),
+        ...
+    }
+
+Seeing this structure next to `STARMAP` suggests that this could be refactored further, but I'll leave that up to you.
+
+We use the `Planet` instances in the `travel()` function. 
+The code should be
+
+    planet = PLANETS['earth']
+    ...
+    while ...:
+        planet.visit(flags)
+        display_destinations(planet)
+        planet = select_planet(planet.destinations)
+
+Note that you need to modify these methods slightly.
+
+At this point, the tests should pass.
+
+### 9.5 Exercise: Breaking down the visit function
+
+Finally, we have restructured our code to a point where we can decompose the huge block of `if` statements.
+
+We first create a function for each of the little puzzles where the player has to enter stuff:
+
+    def star_quiz(...):
+
+    def buy_hyperdrive(...):
+
+    def hire_copilot(...):
+
+    def black_hole(...):
+
+Next, we pass these functions as callbacks in the `puzzle` argument when creating `Planet` objects.
+One entry in the `PLANETS` dict would look like:
+
+    'sirius`: Planet('sirius', TEXT['SIRIUS_DESCRIPTION'], star_quiz)
+
+Now in the `visit()` method, all you need to do is call the callback:
+
+    if puzzle:
+        puzzle(flags)
+
+And the multiple `if` statements should evaporate.
+
+You might want to get rid of the planet `oracle` at this point.
+It is not really a planet, rather an extension of the black hole quiz, so the code can be stuffed into the `black_hole()` puzzle function.
+
+----
+
+## 10. Other Refactoring Strategies
+
+### 10.1 Names matter
+
+*"Planet"* is not an accurate name from an astronomic point of view.
+On the other hand, I would refuse to call anything *"System"* on a computer, because it may mean anything.
+
+From a game design point of view, *"Room"* or *"Location"* could be better. These are good questions to discuss with the domain experts and colleagues on your team. Finding common vocabulary is one good side effect successful refactoring may have.
+
+### 10.2 Programming paradigms
 
 When refactoring Python code, you often have multiple options.
 It helps if you have a **programming paradigm** in mind that you are working towards, such as:
@@ -327,13 +456,33 @@ It helps if you have a **programming paradigm** in mind that you are working tow
 * functional programming with stateless functions that can be recombined
 * strictly object-oriented programming
 * hybrid architecture with core classes and toplevel functions
+* look for specific **Design Patterns** that describe well what your code is doing
+* practice TDD and write additional tests when extracting larger units of code
 
-In my experience, refactoring does not require fancy techniques. 
-Refactoring is more about executing a few standard techniques consistently.
+In my experience, refactoring is much about executing a few standard techniques consistently.
 
 You find a great list of refactoring techniques on [refactoring.guru](https://refactoring.guru/) by Alexander Shvets.
 
-## 10. Closing Remarks
+### 10.3 Embrace future change
+
+In refactoring, you always want to separate things that are likely to change from things that don't.
+What might change in a text adventure?
+
+* connections between planets
+* puzzles on the planets
+* new planets
+* almost any text
+* a graphical or web interface (replacing the `print()` statements would justify a complete rewrite in this case)
+
+With well-refactored code, any of the above should require changing a single location in the code.
+
+In the end, our rectorings should make it easy to add more planets, puzzles or write a completely new adventure.
+
+**Give it a try and have fun programming!**
+
+----
+
+## 11. Closing Remarks
 
 Refactoring is like washing. It is most effective if repeated regularly.
 
