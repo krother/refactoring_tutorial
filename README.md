@@ -69,7 +69,7 @@ You should see a message like:
 
 To see the game output, do:
 
-   pytest -s test_space_game.py::test_travel
+    pytest -s test_space_game.py::test_travel
 
 ----
 
@@ -82,16 +82,16 @@ We are not looking for missing spaces or other style issues.
 
 Look for the following:
 
-- [] long Python modules
-- [] long functions that do not fit on a screen page
-- [] duplicate sections
-- [] code sections that are similar
-- [] code with many indentation levels
-- [] names of functions that are not descriptive
-- [] mixture of languages (e.g. HTML / SQL inside Python code)
-- [] code that mixes different domains together (e.g. user interface + business logic)
-- [] code that could be expressed more simply
-- [] code that you find hard to read
+- [ ] long Python modules
+- [ ] long functions that do not fit on a screen page
+- [ ] duplicate sections
+- [ ] code sections that are similar
+- [ ] code with many indentation levels
+- [ ] names of functions that are not descriptive
+- [ ] mixture of languages (e.g. HTML / SQL inside Python code)
+- [ ] code that mixes different domains together (e.g. user interface + business logic)
+- [ ] code that could be expressed more simply
+- [ ] code that you find hard to read
 
 Mark everything you find with a `#TODO` comment.
 
@@ -115,76 +115,152 @@ Now it is a lot easier to e.g. add a second language.
 
 ----
 
-5. b) Split a long function into multiple shorter ones (apply one of the most fundamental refactoring techniques for warming up)
+## 6. Extract Functions
 
-   - goal: make the main function look nice
+**The most fundamental refactoring technique is to split a long function into shorter ones.**
 
-Recipe: Extract a function
+We will make our toplevel function `travel()` easy to read.
+For that, we chop it into smaller pieces.
+By creating smaller functions, we either clean up the mess right away or at least create a smaller mess that is contained locally.
 
-    1. Find a piece of code you want to move into a function
-    2. Give the function a name and create a def line
-    3. Move the code into the new function
-    4. Make a parameter out of every variable not created inside the function
-    5. Add a return statement at the end with every variable used later
-    6. Add a function call where you took the code
-    7. Run the tests
+We will use the following recipe:
 
-    !! it is tempting to reorganize variables etc. now. Don't do this yet.
+### 6.1 Recipe: Extract a function
 
-c) Extract a function display_inventory
+1. Find a piece of code you want to move into a function
+2. Give the function a name and create a `def` line
+3. Move the code into the new function
+4. Make a parameter out of every variable not created inside the function
+5. Add a return statement at the end with every variable used later
+6. Add a function call where you took the code
+7. Run the tests
 
-Use the signature:
+Let's do this on a few examples:
 
-   def display_inventory(credits, engines, copilot)
+### 6.2 Exercise: extract display_inventory
+
+The paragraph labeled **display inventory** on top ov `travel()` makes a good refactoring candidate.
+Create a new function using the signature:
+
+    def display_inventory(credits, engines, copilot)
 
 This function does not need a return statement.
 
-d) Extract a function `display_hyperjump_menu()`
+Do not forget to run the tests afterwards.
 
-Use the code paragraph labeled similarly.
+### 6.3 Exercise: extract display_destinations
 
-Find out what argument the function needs.
+Extract a function `display_destinations()` from the code paragraph labeled similarly.
+
+Find out what arguments the function needs.
 This function also does not need a return statement.
 
-Run the tests.
+Work through the recipe.
 
-e) Extract a function `select_planet()` 
+### 6.4 Exercise: extract select_planet
 
-Use the last code paragraph from the `travel()` function.
+Extract a function `select_planet()` from the last code paragraph from the `travel()` function.
 This function needs a single parameter and a single return value.
 
-Find out which.
+Complete the function call and the extracted function:
 
-### Extract and Modify
+    planet = select_planet(...)
 
-Extract a function `visit_planets()`
 
-When you follow the recipe, something does not quite fit. The code block contains two `return` statements (in the black hole section) that would break the test. We have to take care of these by modifying the code.
+----
 
-   We will use an extra variable `dead`.
+## 7. Extract and Modify
 
-   - at the start of the visit_planets() function, set `dead` to `False`
-   - replace the single `return` statements by `dead = True`
-   - return the `dead` variable along with all other variables
-   - add the new variable `dead = False` in the beginning of the main function `travel`
-   - assign to `dead` along with the other values returned from the function call
+Sometimes, you need to modify a function to move it elsewhere.
 
-### How many functions should you extract?
+### 7.1 Exercise: extract visit_planets
+
+To get a short and clean `travel()` function, it would be good to move the huge block with nested `if` statements out of the way.
+Let's extract a function `visit_planets()`. 
+Start with the recipe for extracting a function.
+
+Use the signature:
+
+    def visit_planet(planet, engines, copilot, credits, crystal_found):
+        ...
+
+and the function call:
+
+    planet, engines, copilot, credits, crystal_found, destinations = visit_planet(planet, engines, copilot, credits, crystal_found)
+
+**When you refactor the code, the tests should fail!**
+
+### 7.2 The function does not work
+
+When you follow the recipe for extracting functions, the tests break.
+Something does not quite fit.
+The code block contains a `return` statements (in the black hole section).
+
+We need to modify the code to keep things working.
+Let's introduce an extra variable `dead`:
+
+1. in the beginning of `travel()`, set the new variable `dead = False`
+2. add `dead` to the arguments of `visit_planet()`
+3. add `dead` to the function call to `visit_planet()`
+4. add `dead` to the return statement in `visit_planet()`
+5. replace the single `return` statements by `dead = True`
+6. run the tests
+
+The tests should pass now.
+
+### 7.3 The function is not pretty
+
+The function signature of `visit_planet()` is not very pretty. 
+It contains a long list of boolean arguments.
+Our signature exposes a problem with our data structures. 
+This is a good thing.
+
+We will clean up the data structure in the next section.
+
+An alternative, would be to create a nested function or use global variables for the booleans.
+I prefer the long arguments, because you can move the function around more easily, but the alternatives are fine as well.
+
+In all cases, our fix is **temporary**.
+
+
+### 7.4 How many functions should you extract?
 
 In an ideal world, **each function does exactly one thing**.
+What does that mean?
 
-Quote Bob: when is a function doing one thing? When you cannot make two functions out of it.
+In his [Clean Code Lectures](), Uncle Bob (Robert C. Martin) speaks :
 
-We won't go as far in this tutorial because we have other things to do. And often, there might be more important refactorings.
-Not every function has to be split *right away*.
+    Q: When is a function doing exactly one thing?
+    
+    A: When you cannot make two functions out of it.
 
-## Extract data structures
+That means we could probably extract even more functions.
+Think about extracting functions for the little puzzles where the player has to enter stuff:
+
+    def star_quiz(...):
+
+    def buy_hyperdrive(...):
+
+    def hire_copilot(...):
+
+    def black_hole(...):
+
+    def oracle_quiz(...):
+
+Although these might be good ideas, we do not have to do that **right now**. 
+There are other, more important refactorings to take care of.
+
+Feel free to experiment with extracting functions on your own.
+
+----
+
+## 8. Extract Data Structures
 
 After extracting a module and functions, the `travel()` function became a lot shorter already. 
 But there are still many things to improve.
 Let's focus on the data structures:
 
-### Flags
+### 8.1 Encapsulate boolean flags
 
 The progress of the game is controlled by a bunch of booleans: `copilot`, `credits`, `crystal_found` etc.
 These booleans are passed around together several times.
