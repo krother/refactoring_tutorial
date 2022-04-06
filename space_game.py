@@ -198,7 +198,7 @@ def travel():
 
             destinations = ["earth"]
 
-        # display hyperjump menu
+        # display hyperjump destinations
         print("\nWhere do you want to travel?")
         position = 1
         for d in destinations:
