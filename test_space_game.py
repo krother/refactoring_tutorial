@@ -16,11 +16,9 @@ SOLUTION = [
     "2",
     "3",
     "yes",  # jump into black hole
-    "42",
-    "1",  # get crystal
 ]
 
-DIE_BY_BLACK_HOLE = [
+DEATH_BY_BLACK_HOLE = [
     "2",
     "2",  # go to sirius and win quiz
     "1",
@@ -38,11 +36,12 @@ PHRASES = [
     "The stars are waiting for you",
     "Betelgeuse",
     "credits",
+    "tech-savvy copilot",
     "buy",
     "Do you want to hire them",
     "Black Hole",
     "stupid idea",
-    "Return to your people in peace",
+    "return from your adventure",
     "THE END",
 ]
 
@@ -71,12 +70,13 @@ def test_output(monkeypatch, capsys, solution_input):
 
 def test_die(monkeypatch, capsys):
     """player dies"""
-    monkeypatch.setattr("sys.stdin", io.StringIO("\n".join(DIE_BY_BLACK_HOLE)))
+    monkeypatch.setattr("sys.stdin", io.StringIO("\n".join(DEATH_BY_BLACK_HOLE)))
 
     travel()
 
     captured = capsys.readouterr()
-    assert "crunches" in captured.out
+    assert "grain of dust" in captured.out
+    assert "return from your adventure" not in captured.out
 
 
 @pytest.mark.parametrize("phrase", PHRASES)

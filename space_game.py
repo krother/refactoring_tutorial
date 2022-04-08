@@ -66,7 +66,7 @@ You are close to Black Hole #0997. Maybe coming here was a really stupid idea.
 Do you want to examine the black hole closer? [yes/no]
 """,
     "BLACK_HOLE_CRUNCHED": """
-The black hole crunches you into a tiny piece of dust.
+The black hole condenses your spaceship into a grain of dust.
 
     THE END
 """,
@@ -76,32 +76,10 @@ On the rim of the black hole your copilot blurts out:
     Turn left!
 
 You ignite the next-gen hyperdrive, creating a time-space anomaly.
-You are transported to an orthogonal dimension.
-""",
-    "ORACLE_QUESTION": """
-You have reached the cosmic oracle. With a booming telepathic voice it proclaims:
-
-    What is the answer to life, the universe and everything?
-
-What do you reply?
-""",
-    "ORACLE_CORRECT": """
-You are worthy of our knowledge. In this crystal you will find a matter conversion tutorial.
-Return to your people in peace.
-
-A portal opens in front of you.
-""",
-    "ORACLE_INCORRECT": """
-You have much to learn still. Return to your people in peace. But we will keep that funny toy of yours.
-
-A portal opens in front of you.
+You travel through an orthogonal dimension where you experience wonders beyond description.
 """,
     "END_CREDITS": """
-You return from your adventure wise and famous.
-You have found the saged and fabulous crystal. Once decyphered,
-it will advance the knowledge of all sentient beings by generations. 
-
-It may also look good in your cockpit.
+You return from your adventure wise and with good stories to tell.
 
     THE END
 """,
@@ -116,19 +94,19 @@ def travel():
     engines = False
     copilot = False
     credits = False
-    crystal_found = False
+    game_end = False
 
-    while not crystal_found:
+    while not game_end:
 
         print(TEXT["BAR"])
 
         # display inventory
         if credits:
-            print("You have plenty of stellar credits.")
+            print("You have plenty of credits.")
         if engines:
-            print("You have a brand new next-gen hyperdrive.")
+            print("You have a brand new hyperdrive.")
         if copilot:
-            print("A furry tech-savvy copilot is on board.")
+            print("A tech-savvy copilot is on board.")
 
         #
         # interaction with planets
@@ -181,42 +159,21 @@ def travel():
             if input(TEXT["BLACK_HOLE_EXAMINE_QUESTION"]) == "yes":
                 if engines and copilot:
                     print(TEXT["BLACK_HOLE_COPILOT_SAVES_YOU"])
-                    planet = "oracle"
+                    game_end = True
                 else:
                     print(TEXT["BLACK_HOLE_CRUNCHED"])
                     return
 
-        if planet == "oracle":
-            print(TEXT["ORACLE_QUESTION"])
-            answer = input()
-            if answer == "42":
-                print(TEXT["ORACLE_CORRECT"])
-                crystal_found = True
-            else:
-                print(TEXT["ORACLE_INCORRECT"])
-                engines = False
+        if not game_end:
+            # select next planet
+            print("\nWhere do you want to travel?")
+            position = 1
+            for d in destinations:
+                print(f"[{position}] {d}")
+                position += 1
 
-            destinations = ["earth"]
-
-        # display hyperjump destinations
-        print("\nWhere do you want to travel?")
-        position = 1
-        for d in destinations:
-            print(f"[{position}] {d}")
-            position += 1
-
-        # choose the next planet
-        travel_to = None
-        while travel_to not in destinations:
-            text = input()
-            try:
-                index = int(text)
-                travel_to = destinations[index - 1]
-            except ValueError:
-                print("please enter a number")
-            except IndexError:
-                print(f"please enter 1-{len(destinations)}")
-        planet = travel_to
+            choice = input()
+            planet = destinations[int(choice) - 1]
 
     print(TEXT["END_CREDITS"])
 
