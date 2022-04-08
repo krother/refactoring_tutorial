@@ -12,8 +12,8 @@ TEXT = {
     fame, wisdom, and adventure.
     The stars are waiting for you.
 
+*********************************************************************
 """,
-    "BAR": "\n*********************************************************************\n",
     "EARTH_DESCRIPTION": "\nYou are on Earth. The cradle of humankind. A rather dull place.",
     "CENTAURI_DESCRIPTION": "\nYou are on Alpha Centauri. A buzzing trade hub.\nYou can buy almost anything here.",
     "HYPERDRIVE_SHOPPING_QUESTION": """
@@ -98,8 +98,6 @@ def travel():
 
     while not game_end:
 
-        print(TEXT["BAR"])
-
         # display inventory
         if credits:
             print("You have plenty of credits.")
@@ -130,7 +128,7 @@ def travel():
 
         if planet == "sirius":
             print(TEXT["SIRIUS_DESCRIPTION"])
-            destinations = ["orion", "earth", "BH#0997"]
+            destinations = ["orion", "earth", "black_hole"]
 
             if not credits:
                 print(TEXT["SIRIUS_QUIZ_QUESTION"])
@@ -153,7 +151,7 @@ def travel():
                 print(TEXT["ORION_DESCRIPTION"])
                 print(TEXT["ORION_NOTHING_GOING_ON"])
 
-        if planet == "BH#0997":
+        if planet == "black_hole":
             print(TEXT["BLACK_HOLE_DESCRIPTION"])
             destinations = ["sirius"]
             if input(TEXT["BLACK_HOLE_EXAMINE_QUESTION"]) == "yes":

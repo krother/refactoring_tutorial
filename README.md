@@ -1,6 +1,10 @@
 
 # Refactoring 101
 
+![](starmap.png)
+
+*planet images by [Justin Nichol on opengameart.org](https://opengameart.org/content/20-planet-sprites) CC-BY 3.0*
+
 ## Goal of this Tutorial
 
 In this tutorial, you will refactor a space travel text adventure.
@@ -158,24 +162,14 @@ This function does not need a return statement.
 
 Do not forget to run the tests afterwards.
 
-### 6.3 Exercise: extract display_destinations
-
-Extract a function `display_destinations()` from the code paragraph labeled similarly.
-
-Find out what arguments the function needs.
-This function also does not need a return statement.
-
-Work through the recipe for extracting a function.
-
-### 6.4 Exercise: extract select_planet
+### 6.3 Exercise: extract select_planet
 
 Extract a function `select_planet()` from the last code paragraph from the `travel()` function.
+
 This function needs a single parameter and a single return value.
+Find out what signature the function should have.
 
-Complete the function call and the extracted function:
-
-    planet = select_planet(...)
-
+Work through the recipe for extracting a function.
 
 ----
 
@@ -191,13 +185,13 @@ Start with the recipe for extracting a function.
 
 Use the signature:
 
-    def visit_planet(planet, engines, copilot, credits, crystal_found):
+    def visit_planet(planet, engines, copilot, credits, game_end):
         ...
 
 and the function call:
 
-    planet, engines, copilot, credits, crystal_found, destinations = \
-        visit_planet(planet, engines, copilot, credits, crystal_found)
+    destinations, engines, copilot, credits, game_end = \
+        visit_planet(planet, engines, copilot, credits, game_end)
 
 **When you refactor the code, the tests should fail!**
 
@@ -205,38 +199,16 @@ and the function call:
 
 When you follow the recipe for extracting functions, the tests break.
 Something does not quite fit.
-The code block contains a `return` statements (in the black hole section).
+The code block contains an extra `return` statement (in the black hole section).
 
-We need to modify the code to keep things working.
-Let's introduce an extra variable `dead`:
+We need to modify two things to keep the code working:
 
-1. in the beginning of `travel()`, set the new variable `dead = False`
-2. add `dead` to the arguments of `visit_planet()`
-3. add `dead` to the function call to `visit_planet()`
-4. add `dead` to the return statement in `visit_planet()`
-5. replace the single `return` statement by `dead = True`
-6. add `dead` to the conditions terminating the `while` loop in travel
-7. add an extra `if` condition that skips the planet selection in `travel()` if `dead == True`
-8. run the tests
+1. Replace the `return` statement by `game_end = True`
+2. Move the line printing end credits into the conditional branch where your copilot saves you
 
-The tests should pass now.
+Then run the tests. They should pass now.
 
-### 7.3 The function is not pretty
-
-The function signature of `visit_planet()` is not very pretty. 
-It contains a long list of boolean arguments.
-Our signature exposes a problem with our data structures. 
-This is a good thing.
-
-We will clean up the data structure in the next section.
-
-An alternative, would be to create a nested function or use global variables for the booleans.
-I prefer the long arguments, because you can move the function around more easily, but the alternatives are fine as well.
-
-In all cases, our fix is **temporary**.
-
-
-### 7.4 How many functions should you extract?
+### 7.3 How many functions should you extract?
 
 In an ideal world, **each function does exactly one thing**.
 What does that mean?
@@ -247,11 +219,8 @@ In his [Clean Code Lectures](https://www.youtube.com/watch?v=7EmboKQH8lM), Uncle
     
     A: When you cannot make two functions out of it.
 
-That means we could probably extract even more functions, especially from `visit_planet()`.
-Although this is a good idea, we do not have to do that **right now**. 
-There are other, more important refactorings to take care of.
-
-Feel free to experiment with extracting functions on your own.
+Although this is generally a good idea, you do not have to decompose everything **right away**. 
+Often there are other, more important refactorings to take care of.
 
 ----
 
@@ -263,9 +232,15 @@ Let's focus on the data structures:
 
 ### 8.1 Exercise: Extract boolean flags
 
-The progress of the game is controlled by a bunch of booleans: `copilot`, `credits`, `crystal_found` etc.
-These booleans are passed around together several times.
-This is a clear sign that they belong together and should be a data structure.
+The function signature of `visit_planet()` is not very pretty. 
+It contains a long list of boolean arguments.
+This was less obvious before.
+Our refactoring has exposed a problem with the data structures (or lack thereof).
+Let's take a closer look:
+
+The game progress is controlled by the booleans: `copilot`, `credits`, `engine` and `game_end`.
+These booleans are passed around several times.
+This is a sign that they could be placed in one data structure.
 
 What Python data structure can we use to store the presence or absence of multiple items?
 
@@ -299,7 +274,30 @@ Finally, run the tests again. The tests should pass.
 
 *Note that looking up things in the set uses string comparison. This is not very performant, of course, but in a text adventure I frankly don't care. If performance becomes important, one could replace the strings by integers or Enums. Also, if you believe performance is important, how about writing a performance test for it first?*
 
-### 8.2 Exercise: Extract a dictionary
+### 8.2 Extract puzzle functions
+
+The `visit_planet()` function is still very long.
+Now is a good moment to decompose it further.
+Create a function for the hyperdrive shopping scene on Centauri.
+
+The code left in `visit_planet()` should look like this:
+
+    if planet == "centauri":
+        print(TEXT["CENTAURI_DESCRIPTION"])
+        destinations = ["earth", "orion"]
+        buy_hyperdrive(flags)
+
+Do the same for the other puzzles:
+
+    def star_quiz(flags):
+
+    def hire_copilot(flags):
+
+    def black_hole(flags):
+
+Now `visit_planet()` should approximately fit on your screen.
+
+### 8.3 Exercise: Extract a dictionary
 
 The destinations can be placed in a data structure as well.
 With each planet in `visit_planet()` there is always a list of destinations returned.
@@ -311,8 +309,7 @@ Let's use the following dictionary instead:
         'centauri': ['earth', 'orion'],
         'sirius': ...,
         'orion': ...,
-        'BH#0997': ['sirius'],
-        'oracle': ['earth']
+        'black_hole': ['sirius'],
     }
 
 1. place the dictionary on top of the Python file
@@ -424,16 +421,6 @@ Finally, we have restructured our code to a point where we can decompose the hug
 
 Some planets have a puzzle. Add a puzzle attribute to `Planet.__init__()`
 
-We first create a function for each of the little puzzles where the player has to enter stuff:
-
-    def star_quiz(...):
-
-    def buy_hyperdrive(...):
-
-    def hire_copilot(...):
-
-    def black_hole(...):
-
 Next, we pass these functions as callbacks in the `puzzle` argument when creating `Planet` objects.
 One entry in the `PLANETS` dict would look like:
 
@@ -502,3 +489,13 @@ Of course, one could wait for two weeks, so that taking a shower is really worth
 But in practice this is not such a good idea, at least not if you are working with other people.
 
 It is the same with refactoring.
+
+----
+
+## License
+
+(c) 2022 Dr. Kristian Rother `kristian.rother@posteo.de`
+
+This tutorial is subject to the MIT License. Have fun sharing!
+
+See LICENSE for details.
