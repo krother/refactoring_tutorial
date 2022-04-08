@@ -26,6 +26,14 @@ In practice, this means thing like:
 
 In this tutorial, you can try all of these. Let's go!
 
+### 1.1 Recipe: Generic Refactoring
+
+The basic workflow in refactoring is:
+
+    1. run the tests
+    2. edit the code
+    3. run the tests
+
 ----
 
 ## 2. Getting Started
@@ -127,19 +135,21 @@ We will use the following recipe:
 
 ### 6.1 Recipe: Extract a function
 
-1. Find a piece of code you want to move into a function
-2. Give the function a name and create a `def` line
-3. Move the code into the new function
-4. Make a parameter out of every variable not created inside the function
-5. Add a return statement at the end with every variable used later
-6. Add a function call where you took the code
-7. Run the tests
+This recipe has a few more steps:
+
+    1. Find a piece of code you want to move into a function
+    2. Give the function a name and create a `def` line
+    3. Move the code into the new function
+    4. Make a parameter out of every variable not created inside the function
+    5. Add a return statement at the end with every variable used later
+    6. Add a function call where you took the code
+    7. Run the tests
 
 Let's do this on a few examples:
 
 ### 6.2 Exercise: extract display_inventory
 
-The paragraph labeled **display inventory** on top ov `travel()` makes a good refactoring candidate.
+The paragraph labeled **display inventory** on top of `travel()` makes a good refactoring candidate.
 Create a new function using the signature:
 
     def display_inventory(credits, engines, copilot)
@@ -155,7 +165,7 @@ Extract a function `display_destinations()` from the code paragraph labeled simi
 Find out what arguments the function needs.
 This function also does not need a return statement.
 
-Work through the recipe.
+Work through the recipe for extracting a function.
 
 ### 6.4 Exercise: extract select_planet
 
@@ -186,7 +196,8 @@ Use the signature:
 
 and the function call:
 
-    planet, engines, copilot, credits, crystal_found, destinations = visit_planet(planet, engines, copilot, credits, crystal_found)
+    planet, engines, copilot, credits, crystal_found, destinations = \
+        visit_planet(planet, engines, copilot, credits, crystal_found)
 
 **When you refactor the code, the tests should fail!**
 
@@ -203,9 +214,10 @@ Let's introduce an extra variable `dead`:
 2. add `dead` to the arguments of `visit_planet()`
 3. add `dead` to the function call to `visit_planet()`
 4. add `dead` to the return statement in `visit_planet()`
-5. replace the single `return` statements by `dead = True`
+5. replace the single `return` statement by `dead = True`
 6. add `dead` to the conditions terminating the `while` loop in travel
-7. run the tests
+7. add an extra `if` condition that skips the planet selection in `travel()` if `dead == True`
+8. run the tests
 
 The tests should pass now.
 
@@ -229,7 +241,7 @@ In all cases, our fix is **temporary**.
 In an ideal world, **each function does exactly one thing**.
 What does that mean?
 
-In his [Clean Code Lectures](), Uncle Bob (Robert C. Martin) speaks :
+In his [Clean Code Lectures](https://www.youtube.com/watch?v=7EmboKQH8lM), Uncle Bob (Robert C. Martin) states:
 
     Q: When is a function doing exactly one thing?
     
@@ -266,7 +278,7 @@ First, instead of setting multiple booleans to `False` in `travel()`, define an 
 
 To check a flag, we would use its name as a string. So the `while` condition in `travel()` would become:
 
-    while not 'crystal_found' in flags or 'dead' in flags:
+    while not ('crystal_found' in flags or 'dead' in flags):
 
 Now, we need to change the function `display_inventory()` as well:
 
@@ -325,11 +337,11 @@ Let's see what we can do.
 Should we maybe extract the descriptions of each planet into *another* dictionary?
 We would get:
 
-PLANET_DESCRIPTIONS = {
-    'earth': TEXT['EARTH_DESCRIPTION],
-    'sirius': TEXT['SIRIUS_DESCRIPTION],
-    ...
-}
+    PLANET_DESCRIPTIONS = {
+        'earth': TEXT['EARTH_DESCRIPTION],
+        'sirius': TEXT['SIRIUS_DESCRIPTION],
+        ...
+    }
 
 You could do this, and it would further simplify `visit_planet()`. 
 But seeing multiple dictionaries with the same keys is a clear hint that there is a deeper structure in our code.
@@ -342,7 +354,6 @@ We find a couple of things that the planets have in common:
 * every planet has a name
 * every planet has a description
 * every planet has connections to other planets
-* some planets have a puzzle
 
 These are attributes of the new class.
 
@@ -350,10 +361,9 @@ Let's define a new class with the following signature:
 
     class Planet:
 
-        def __init__(self, name, description, puzzle=None):
+        def __init__(self, name, description):
             self.name = name
             self.description = description
-            self.puzzle = puzzle
 
 For the destinations, we can use the `@property` decorator, so we can continue using the `STARMAP` dict:
 
@@ -411,6 +421,8 @@ At this point, the tests should pass.
 ### 9.5 Exercise: Breaking down the visit function
 
 Finally, we have restructured our code to a point where we can decompose the huge block of `if` statements.
+
+Some planets have a puzzle. Add a puzzle attribute to `Planet.__init__()`
 
 We first create a function for each of the little puzzles where the player has to enter stuff:
 
