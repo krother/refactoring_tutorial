@@ -9,10 +9,10 @@ SOLUTION = [
     "2",
     "2",  # go to sirius and win quiz
     "1",
+    "42",  # hire copilot on orion
     "1",
     "yes",  # go to centauri and buy GPU drive
     "2",
-    "yes",  # hire copilot on orion
     "2",
     "3",
     "yes",  # jump into black hole
@@ -22,10 +22,10 @@ DEATH_BY_BLACK_HOLE = [
     "2",
     "2",  # go to sirius and win quiz
     "1",
+    "41",  # hire copilot on orion
     "1",
     "yes",  # go to centauri and buy GPU drive
-    "2",
-    "no",  # hire copilot on orion
+    "1",
     "2",
     "3",
     "yes",  # jump into black hole
@@ -36,12 +36,13 @@ PHRASES = [
     "The stars are waiting for you",
     "Betelgeuse",
     "credits",
-    "tech-savvy copilot",
+    "tech-savvy native",
+    "copilot",
     "buy",
-    "Do you want to hire them",
+    "life, the universe and everything",
     "Black Hole",
     "stupid idea",
-    "return from your adventure",
+    "wonders beyond description",
     "THE END",
 ]
 
@@ -76,7 +77,7 @@ def test_die(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert "grain of dust" in captured.out
-    assert "return from your adventure" not in captured.out
+    assert " wonders beyond description" not in captured.out
 
 
 @pytest.mark.parametrize("phrase", PHRASES)

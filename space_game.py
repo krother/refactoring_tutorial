@@ -6,34 +6,24 @@ A simple text adventure written for a refactoring tutorial.
 
 TEXT = {
     "OPENING_MESSAGE": """
-*********************************************************************
+-------------------------------------------------------------------------------
 
-    You and your trusted spaceship set out to look for 
-    fame, wisdom, and adventure.
-    The stars are waiting for you.
-
-*********************************************************************
+    You and your trusted spaceship set out to look for
+    fame, wisdom, and adventure. The stars are waiting for you.
 """,
-    "EARTH_DESCRIPTION": "\nYou are on Earth. The cradle of humankind. A rather dull place.",
-    "CENTAURI_DESCRIPTION": "\nYou are on Alpha Centauri. A buzzing trade hub.\nYou can buy almost anything here.",
-    "HYPERDRIVE_SHOPPING_QUESTION": """
-They have a brand new next-generation hyperdrive with a built-in GPU.
+    "EARTH_DESCRIPTION": "\nYou are on Earth. Beautiful is better than ugly.",
+    "CENTAURI_DESCRIPTION": "\nYou are on Alpha Centauri. All creatures are welcome here.",
+    "HYPERDRIVE_SHOPPING_QUESTION": """There is a brand new hyperdrive with a built-in GPU for sale.
     
 Would you like to buy one [yes/no]""",
     "HYPERDRIVE_TOO_EXPENSIVE": """
 You cannot afford it. The GPU is too expensive.""",
-    "HYPERDRIVE_SHOPPING_SUCCESS": """
-Your spaceship now has a shiny hyperdrive on both sides.
-""",
     "SIRIUS_DESCRIPTION": """
-You are on Sirius. The system is full of media companies
-and content delivery networks.
-""",
-    "SIRIUS_QUIZ_QUESTION": """
-You manage to get a place in *Stellar* - the greatest quiz show in the universe.
-And here is your question:
+You are on Sirius. The system is full of media companies and content delivery networks.""",
+    "SIRIUS_QUIZ_QUESTION": """You manage to get a place in *Stellar* - the greatest quiz show in the universe.
+Here is your question:
 
-Which star do you find on the shoulder of Orion?
+    Which star do you find on the shoulder of Orion?
 
 [1] Altair
 [2] Betelgeuse
@@ -48,21 +38,22 @@ Sorry, this was the wrong answer. Don't take it too sirius.
 Better luck next time.
 """,
     "ORION_DESCRIPTION": """
-You are on Orion. An icy world inhabited by monosyllabic furry sentients.
-""",
-    "ORION_HIRE_COPILOT_QUESTION": """
-You approach the natives at the spaceport
-One of them points at your hyperdrive and says 'Nice!'
+You are on Orion. An icy world inhabited by furry sentients.""",
+    "ORION_HIRE_COPILOT_QUESTION": """A tech-savvy native admires your spaceship.
+They promise to join as a copilot if you can answer a question:
 
-Do you want to hire them as a copilot? [yes/no]
+    What is the answer to question of life, the universe and everything?
+    
+What do you answer?""",
+    "COPILOT_QUESTION_CORRECT": """
+Your new copilot jumps on board and immediately starts
+configuring new docker containers.
 """,
-    "ORION_NOTHING_GOING_ON": """
-They are not very talkative.
+    "COPILOT_QUESTION_INCORRECT": """
+Sorry, that's not it. Try again later.
 """,
     "BLACK_HOLE_DESCRIPTION": """
 You are close to Black Hole #0997. Maybe coming here was a really stupid idea.
-""",
-    "BLACK_HOLE_EXAMINE_QUESTION": """
 Do you want to examine the black hole closer? [yes/no]
 """,
     "BLACK_HOLE_CRUNCHED": """
@@ -76,11 +67,9 @@ On the rim of the black hole your copilot blurts out:
     Turn left!
 
 You ignite the next-gen hyperdrive, creating a time-space anomaly.
-You travel through an orthogonal dimension where you experience wonders beyond description.
+You travel through other dimensions and experience wonders beyond description.
 """,
     "END_CREDITS": """
-You return from your adventure wise and with good stories to tell.
-
     THE END
 """,
 }
@@ -99,12 +88,13 @@ def travel():
     while not game_end:
 
         # display inventory
-        if credits:
-            print("You have plenty of credits.")
-        if engines:
-            print("You have a brand new hyperdrive.")
-        if copilot:
-            print("A tech-savvy copilot is on board.")
+        print("-" * 79)
+        inventory = "\nYou have: "
+        inventory += "plenty of credits, " if credits else ""
+        inventory += "a hyperdrive, " if engines else ""
+        inventory += "a skilled copilot, " if copilot else ""
+        if inventory.endswith(", "):
+            print(inventory.strip(", "))
 
         #
         # interaction with planets
@@ -121,7 +111,6 @@ def travel():
                 print(TEXT["HYPERDRIVE_SHOPPING_QUESTION"])
                 if input() == "yes":
                     if credits:
-                        print(TEXT["HYPERDRIVE_SHOPPING_SUCCESS"])
                         engines = True
                     else:
                         print(TEXT["HYPERDRIVE_TOO_EXPENSIVE"])
@@ -141,20 +130,21 @@ def travel():
 
         if planet == "orion":
             destinations = ["centauri", "sirius"]
-
-            if engines and not copilot:
+            if not copilot:
                 print(TEXT["ORION_DESCRIPTION"])
                 print(TEXT["ORION_HIRE_COPILOT_QUESTION"])
-                if input() == "yes":
+                if input() == "42":
+                    print(TEXT["COPILOT_QUESTION_CORRECT"])
                     copilot = True
+                else:
+                    print(TEXT["COPILOT_QUESTION_INCORRECT"])
             else:
                 print(TEXT["ORION_DESCRIPTION"])
-                print(TEXT["ORION_NOTHING_GOING_ON"])
 
         if planet == "black_hole":
             print(TEXT["BLACK_HOLE_DESCRIPTION"])
             destinations = ["sirius"]
-            if input(TEXT["BLACK_HOLE_EXAMINE_QUESTION"]) == "yes":
+            if input() == "yes":
                 if engines and copilot:
                     print(TEXT["BLACK_HOLE_COPILOT_SAVES_YOU"])
                     game_end = True
