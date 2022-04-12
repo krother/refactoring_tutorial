@@ -433,9 +433,6 @@ Now in the `visit()` method, all you need to do is call the callback:
 
 And the multiple `if` statements should evaporate.
 
-You might want to get rid of the planet `oracle` at this point.
-It is not really a planet, rather an extension of the black hole quiz, so the code can be stuffed into the `black_hole()` puzzle function.
-
 ----
 
 ## 10. Other Refactoring Strategies
