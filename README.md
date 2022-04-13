@@ -1,7 +1,7 @@
 
 # Refactoring 101
 
-![](starmap.png)
+![](talk/starmap.png)
 
 *planet images by [Justin Nichol on opengameart.org](https://opengameart.org/content/20-planet-sprites) CC-BY 3.0*
 
@@ -251,6 +251,10 @@ First, instead of setting multiple booleans to `False` in `travel()`, define an 
 
     flags = set()
 
+Create a preset list of values on top of the module (avoids having quotes everywhere):
+
+    credits, engine, copilot, game_end = range(4)
+
 To check a flag, we would use its name as a string. So the `while` condition in `travel()` would become:
 
     while not ('crystal_found' in flags or 'dead' in flags):
@@ -259,7 +263,7 @@ Now, we need to change the function `display_inventory()` as well:
 
 1. replace the boolean arguments by a single argument `flags`
 2. modify the function call accordingly
-3. modify the function body to use the `in` operator when checking state, e.g. `if 'credits' in flags:`
+3. modify the function body to use the `in` operator when checking state, e.g. `if credits in flags:`
 
 We need to do the same with `visit_planet()`
 
@@ -267,8 +271,8 @@ We need to do the same with `visit_planet()`
 2. modify the function call accordingly
 3. remove the booleans from the return values (the set is mutable). `visit_planet()` only returns `planet` and `destinations`.
 4. remove the booleans from the assigned return in `travel()` as well
-5. modify the function body to use the `in` operator when checking state, e.g. `if 'credits' in flags:`
-6. modify the function body of `visit_planet()`. Whenever one of the booleans is modified, add to the set, e.g. `flags.add('crystal_found')`
+5. modify the function body to use the `in` operator when checking state, e.g. `if credits in flags:`
+6. modify the function body of `visit_planet()`. Whenever one of the booleans is modified, add to the set, e.g. `flags.add(game_end)`
 
 Finally, run the tests again. The tests should pass.
 
@@ -358,17 +362,10 @@ Let's define a new class with the following signature:
 
     class Planet:
 
-        def __init__(self, name, description):
+        def __init__(self, name, description, connections):
             self.name = name
             self.description = description
-
-For the destinations, we can use the `@property` decorator, so we can continue using the `STARMAP` dict:
-
-        @property
-        def destinations(self):
-            return STARMAP[self.name]
-
-Add this code after the definition of `STARMAP`. 
+            self.connections = connections
 
 Run the tests to make sure you didn't mess up anything (even though we do not use the class yet).
 
@@ -392,14 +389,12 @@ The tests won't pass at this point. You may want to run them to make sure you ar
 ### 9.4 Exercise: Create instances
 
 Let's create a dictionary of planets.
-We will do so on the module level:
+We will do so on the module level, replacing `STARMAP`:
 
     PLANETS = {
-        'earth': Planet('earth', TEXT['EARTH_DESCRIPTION']),
+        'earth': Planet('earth', TEXT['EARTH_DESCRIPTION', ['centauri', 'sirius']]),
         ...
     }
-
-Seeing this structure next to `STARMAP` suggests that this could be refactored further, but I'll leave that up to you.
 
 We use the `Planet` instances in the `travel()` function. 
 The code should be
@@ -409,7 +404,7 @@ The code should be
     while ...:
         planet.visit(flags)
         display_destinations(planet)
-        planet = select_planet(planet.destinations)
+        planet = select_planet(planet.connections)
 
 Note that you need to modify these methods slightly.
 
