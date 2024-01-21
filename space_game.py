@@ -76,7 +76,6 @@ You travel through other dimensions and experience wonders beyond description.
 
 
 def travel():
-
     print(TEXT["OPENING_MESSAGE"])
 
     planet = "earth"
@@ -86,7 +85,6 @@ def travel():
     game_end = False
 
     while not game_end:
-
         # display inventory
         print("-" * 79)
         inventory = "\nYou have: "
