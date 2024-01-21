@@ -156,7 +156,7 @@ Let's do this on a few examples:
 The paragraph labeled **display inventory** on top of `travel()` makes a good refactoring candidate.
 Create a new function using the signature:
 
-    def display_inventory(credits, engines, copilot)
+    def display_inventory(credits: bool, engines: bool, copilot: bool) -> None:
 
 This function does not need a return statement.
 
@@ -185,7 +185,8 @@ Start with the recipe for extracting a function.
 
 Use the signature:
 
-    def visit_planet(planet, engines, copilot, credits, game_end):
+def visit_planet(planet: str, engines: bool, copilot: bool, credits: bool, game_end: bool) \
+    -> tuple[list[str], bool, bool, bool, bool]:
         ...
 
 and the function call:
@@ -247,23 +248,25 @@ What Python data structure can we use to store the presence or absence of multip
 Let's use a Python `set` that we call `flags`.
 We need to modify a lot of code.
 
-First, instead of setting multiple booleans to `False` in `travel()`, define an empty set.
+First, define all the flags you have as a literal type on top of the file:
 
-    flags = set()
+    from typing import Literal
 
-Create a preset list of values on top of the module (avoids having quotes everywhere):
+    FLAG = Literal["credits", "engine", "copilot", "game_end"]
 
-    credits, engine, copilot, game_end = range(4)
+instead of setting multiple booleans to `False` in `travel()`, define an empty set.
+
+    flags: set[FLAG] = set()
 
 To check a flag, we would use its name as a string. So the `while` condition in `travel()` would become:
 
-    while not ('crystal_found' in flags or 'dead' in flags):
+    while not ("game_end" in flags):
 
 Now, we need to change the function `display_inventory()` as well:
 
 1. replace the boolean arguments by a single argument `flags`
 2. modify the function call accordingly
-3. modify the function body to use the `in` operator when checking state, e.g. `if credits in flags:`
+3. modify the function body to use the `in` operator when checking state, e.g. `if "credits" in flags:`
 
 We need to do the same with `visit_planet()`
 
@@ -271,12 +274,15 @@ We need to do the same with `visit_planet()`
 2. modify the function call accordingly
 3. remove the booleans from the return values (the set is mutable). `visit_planet()` only returns `planet` and `destinations`.
 4. remove the booleans from the assigned return in `travel()` as well
-5. modify the function body to use the `in` operator when checking state, e.g. `if credits in flags:`
-6. modify the function body of `visit_planet()`. Whenever one of the booleans is modified, add to the set, e.g. `flags.add(game_end)`
+5. modify the function body to use the `in` operator when checking state, e.g. `if "credits" in flags:`
+6. modify the function body of `visit_planet()`. Whenever one of the booleans is modified, add to the set, e.g. `flags.add("game_end")`
 
 Finally, run the tests again. The tests should pass.
 
-*Note that looking up things in the set uses string comparison. This is not very performant, of course, but in a text adventure I frankly don't care. If performance becomes important, one could replace the strings by integers or Enums. Also, if you believe performance is important, how about writing a performance test for it first?*
+*Note that looking up things in the set uses string comparison. This is not very performant, of course, but in a text adventure I frankly don't care.
+The advantage that we could support the Literal with a type checker is more important.
+If performance becomes important, one could replace the strings by integers.
+Also, if you believe performance is important, how about writing a performance test for it first?*
 
 ### 8.2 Extract puzzle functions
 
@@ -328,8 +334,7 @@ The tests should pass.
 
 ## 9. Extract a Class
 
-By now, the `visit_planet()` function has not changed much. 
-We managed to save a couple of lines by extracting the `STARMAP` dictionary.
+By now, the `visit_planet()` function has become a lot shorter. 
 But there is still has a huge nested `if` block.
 Let's see what we can do.
 
@@ -360,12 +365,13 @@ These are attributes of the new class.
 
 Let's define a new class with the following signature:
 
-    class Planet:
+    from pydantic import BaseModel
 
-        def __init__(self, name, description, connections):
-            self.name = name
-            self.description = description
-            self.connections = connections
+    class Planet(BaseModel):
+
+        name: str
+        description: str
+        connections: list[str]
 
 Run the tests to make sure you didn't mess up anything (even though we do not use the class yet).
 
@@ -375,7 +381,7 @@ We will convert the function `visit_planet()` into a method of the new `Planet` 
 
 Move the entire code from `visit_planet()` into a new method with the signature:
 
-    def visit(self, flags):
+    def visit(self, flags: set[FLAG]) -> list[str]:
 
 As the first thing, have the planet print its own description:
 
@@ -392,7 +398,11 @@ Let's create a dictionary of planets.
 We will do so on the module level, replacing `STARMAP`:
 
     PLANETS = {
-        'earth': Planet('earth', TEXT['EARTH_DESCRIPTION', ['centauri', 'sirius']]),
+        'earth': Planet(
+            name='earth',
+            description=TEXT['EARTH_DESCRIPTION'],
+            connections=['centauri', 'sirius']
+            ),
         ...
     }
 
