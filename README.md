@@ -1,6 +1,8 @@
 
 # Refactoring 101
 
+**You find material for the 2024 PyconDE Tutorial on [https://github.com/krother/space](https://github.com/krother/space)**
+
 ![](talk/starmap.png)
 
 *planet images by [Justin Nichol on opengameart.org](https://opengameart.org/content/20-planet-sprites) CC-BY 3.0*
